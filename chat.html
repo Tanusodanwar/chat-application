@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chat App</title>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    margin: 0;
+    background: #f0f2f5;
+    transition: 0.3s;
+}
+
+/* ================= DARK MODE ================= */
+body.dark {
+    background: #0b141a;
+    color: #e9edef;
+}
+
+/* ================= LAYOUT ================= */
+.container {
+    display: flex;
+    height: 90vh;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+    width: 250px;
+    padding: 10px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+/* DARK SIDEBAR */
+body.dark .sidebar {
+    background: #111b21;
+    border-right: 1px solid #222;
+}
+
+/* ================= CONTACT ================= */
+.contact {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin: 6px 0;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #fff;
+    transition: all 0.25s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    position: relative;
+    animation: contactFadeIn 0.25s ease;
+}
+
+/* DARK CONTACT */
+body.dark .contact {
+    background: #202c33;
+}
+
+/* LEFT GRADIENT BAR */
+.contact::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 20%;
+    width: 3px;
+    height: 60%;
+    background: transparent;
+    transition: 0.3s;
+}
+
+.contact:hover::before {
+    background: linear-gradient(180deg, #0095f6, #e1306c);
+}
+
+/* HOVER */
+.contact:hover {
+    transform: translateX(4px);
+    background: linear-gradient(90deg, #f5f7fa, #e8edf3);
+}
+
+body.dark .contact:hover {
+    background: #2a3942;
+}
+
+/* PROFILE IMAGE */
+.contact img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+    border: 2px solid #eee;
+}
+
+body.dark .contact img {
+    border: 2px solid #333;
+}
+
+/* TEXT */
+.contact b {
+    color: #111;
+    display: block;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+body.dark .contact b {
+    color: #fff;
+}
+
+.contact small {
+    color: #777;
+    font-size: 12px;
+}
+
+body.dark .contact small {
+    color: #aaa;
+}
+
+/* ================= ONLINE DOT ================= */
+.online-dot {
+    width: 10px;
+    height: 10px;
+    background: #4caf50;
+    border-radius: 50%;
+    margin-left: auto;
+    box-shadow: 0 0 6px rgba(76, 175, 80, 0.8);
+}
+
+/* ================= CHAT AREA ================= */
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #e5ddd5;
+}
+
+body.dark .chat-area {
+    background: #0b141a;
+}
+
+/* ================= HEADER ================= */
+.top-header,
+.chat-area h3 {
+    padding: 12px 15px;
+    background: #ffffff;
+    border-bottom: 1px solid #ddd;
+    font-weight: 600;
+}
+
+body.dark .top-header,
+body.dark .chat-area h3 {
+    background: #202c33;
+    border-bottom: 1px solid #222;
+}
+
+/* ================= MESSAGES ================= */
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+/* MESSAGE */
+
+/* ================= CHAT STREAM (INSTAGRAM STYLE) ================= */
+
+.messages {
+    display: flex;
+    flex-direction: column;
+}
+
+/* EACH MESSAGE FULL WIDTH STYLE */
+.message {
+    padding: 8px 12px;
+    margin: 4px 0;
+    max-width: 100%;
+    font-size: 14px;
+    display: inline-block;
+    width: fit-content;
+    border-radius: 10px;
+    animation: fadeIn 0.25s ease;
+}
+
+/* USER MESSAGE (RIGHT SIDE STREAM STYLE) */
+.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #0095f6, #7b5cff);
+    color: white;
+    border-radius: 12px 12px 4px 12px;
+}
+
+/* RECEIVED MESSAGE (LEFT SIDE STREAM STYLE) */
+.contact-msg {
+    align-self: flex-start;
+    background: #ffffff;
+    color: #000;
+    border-radius: 12px 12px 12px 4px;
+}
+
+/* DARK MODE */
+body.dark .contact-msg {
+    background: #202c33;
+    color: #e9edef;
+}
+
+/* ================= REMOVE EXTRA GAPS ================= */
+.message + .message {
+    margin-top: 2px;
+}
+
+/* ================= SMOOTH STREAM LOOK ================= */
+.messages {
+    gap: 2px;
+    padding-bottom: 10px;
+}
+/* USER MESSAGE */
+.user {
+    background: linear-gradient(135deg, #0095f6, #7b5cff);
+    color: white;
+    margin-left: auto;
+    box-shadow: 0 2px 8px rgba(0,149,246,0.3);
+}
+
+/* RECEIVED */
+.contact-msg {
+    background: #ffffff;
+    color: #000;
+}
+
+body.dark .contact-msg {
+    background: #202c33;
+    color: #e9edef;
+}
+
+/* ================= TICKS ================= */
+.tick {
+    font-size: 10px;
+    margin-left: 5px;
+    color: #888;
+}
+
+.tick.seen {
+    color: #0095f6;
+}
+
+/* ================= TYPING ================= */
+.typing {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.typing span {
+    width: 6px;
+    height: 6px;
+    background: #999;
+    border-radius: 50%;
+    animation: blink 1.2s infinite;
+}
+
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+    0%, 80%, 100% { opacity: 0; }
+    40% { opacity: 1; }
+}
+
+/* ================= INPUT ================= */
+.input-box {
+    display: flex;
+    padding: 10px;
+    background: #fff;
+}
+
+body.dark .input-box {
+    background: #202c33;
+}
+
+/* INPUT */
+input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: 0.2s;
+}
+
+input:focus {
+    box-shadow: 0 0 5px rgba(0,149,246,0.3);
+    border-color: #0095f6;
+}
+
+body.dark input {
+    background: #2a3942;
+    border: none;
+    color: #fff;
+}
+
+/* BUTTON */
+button {
+    padding: 10px 16px;
+    border: none;
+    background: linear-gradient(135deg, #0095f6, #e1306c);
+    color: white;
+    border-radius: 20px;
+    margin-left: 5px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover {
+    transform: scale(1.08);
+}
+
+button:active {
+    transform: scale(0.96);
+}
+
+/* ================= ADD BUTTON ================= */
+.add-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #0095f6, #ff2da0);
+    color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    font-size: 30px;
+    text-align: center;
+    line-height: 60px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+}
+
+/* ================= MODAL ================= */
+#modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+body.dark #modal {
+    background: #202c33;
+    color: #fff;
+}
+
+/* ================= SCROLLBAR ================= */
+.sidebar::-webkit-scrollbar,
+.messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.messages::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 10px;
+}
+
+/* ================= ANIMATION ================= */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes contactFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+}
+   </style>
+</head>
+
+<body>
+
+    <div class="container">
+    <div id="typing" class="typing" style="display:none;">
+        <span></span><span></span><span></span>
+    </div>
+
+
+        <div class="sidebar">
+            <div id="contactList"></div>
+        </div>
+
+        <div class="chat-area">
+            <h3 id="chatHeader">Select Contact</h3>
+            <div class="top-header">
+    <span id="userHeader"></span>
+</div>
+
+            <div id="messages" class="messages"></div>
+
+            <div class="input-box">
+                <input id="messageInput" placeholder="Message">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ADD BUTTON -->
+    <div class="add-btn" onclick="openModal()">+</div>
+
+    <!-- MODAL -->
+    <div id="modal">
+        <h3>Add Contact</h3>
+
+        <input id="contactName" placeholder="Name"><br><br>
+
+        <button onclick="addContact()">Add</button>
+        <button onclick="closeModal()">Cancel</button>
+    </div>
+
+    <script>
+
+        /////////////////////////
+        // ✅ 1. SOCKET FIRST
+        /////////////////////////
+
+        const socket = io();
+
+        /////////////////////////
+        // ✅ 2. USER CHECK
+        /////////////////////////
+
+        const user = localStorage.getItem("chatUser");
+        document.getElementById("userHeader").innerText = "Welcome, " + user;
+
+        if (!user) {
+            location.href = "login.html";
+        }
+
+        socket.emit("newuser", user);
+
+        /////////////////////////
+        // ✅ 3. VARIABLES
+        /////////////////////////
+
+        let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
+        let chats = JSON.parse(localStorage.getItem("chats")) || {};
+        let selectedContact = null;
+
+        /////////////////////////
+        // ✅ 4. RENDER CONTACTS
+        /////////////////////////
+
+        function renderContacts() {
+            const box = document.getElementById("contactList");
+            box.innerHTML = "";
+
+            contacts.forEach(c => {
+                const div = document.createElement("div");
+                div.className = "contact";
+
+                const msgs = chats[c.id] || [];
+                const last = msgs.length ? msgs[msgs.length - 1].text : "";
+
+                div.innerHTML = `<b>${c.name}</b><br><small>${last}</small>`;
+
+                div.onclick = () => selectContact(c);
+
+                box.appendChild(div);
+            });
+        }
+
+        /////////////////////////
+        // ✅ 5. SELECT CONTACT
+        /////////////////////////
+
+        function selectContact(c) {
+            selectedContact = c;
+            document.getElementById("chatHeader").innerText = c.name;
+            loadMessages();
+        }
+
+        /////////////////////////
+        // ✅ 6. LOAD MESSAGES
+        /////////////////////////
+
+        function loadMessages() {
+            const box = document.getElementById("messages");
+            box.innerHTML = "";
+
+            if (!selectedContact) return;
+
+            const msgs = chats[selectedContact.id] || [];
+
+            msgs.forEach(m => {
+                const div = document.createElement("div");
+                div.className = "message " + (m.sender === user ? "user" : "contact-msg");
+                div.innerText = m.text;
+                box.appendChild(div);
+            });
+
+            box.scrollTop = box.scrollHeight;
+        }
+
+        /////////////////////////
+        // ✅ 7. SEND MESSAGE
+        /////////////////////////
+
+        function sendMessage() {
+
+            const input = document.getElementById("messageInput");
+            const text = input.value.trim();
+
+            if (!text) return;
+            if (!selectedContact) return alert("Select contact");
+
+            socket.emit("privateMessage", {
+                to: selectedContact.name,
+                from: user,
+                message: text
+            });
+
+            if (!chats[selectedContact.id]) chats[selectedContact.id] = [];
+
+            chats[selectedContact.id].push({
+                sender: user,
+                text: text
+            });
+
+            localStorage.setItem("chats", JSON.stringify(chats));
+
+            input.value = "";
+            loadMessages();
+            renderContacts();
+        }
+
+        /////////////////////////
+        // ✅ 8. RECEIVE MESSAGE
+        /////////////////////////
+
+        socket.on("privateMessage", (data) => {
+
+            let contact = contacts.find(c => c.name === data.from);
+
+            if (!contact) {
+                contact = { id: data.from, name: data.from };
+                contacts.push(contact);
+                localStorage.setItem("contacts", JSON.stringify(contacts));
+            }
+
+            if (!chats[data.from]) chats[data.from] = [];
+
+            chats[data.from].push({
+                sender: data.from,
+                text: data.message
+            });
+
+            localStorage.setItem("chats", JSON.stringify(chats));
+
+            renderContacts();
+
+            if (selectedContact && selectedContact.id === data.from) {
+                loadMessages();
+            }
+        });
+
+        /////////////////////////
+        // ✅ 9. ADD CONTACT
+        /////////////////////////
+
+        function addContact() {
+
+            const name = document.getElementById("contactName").value.trim();
+
+            if (!name) return alert("Enter name");
+
+            contacts.push({
+                id: name,
+                name: name
+            });
+
+            localStorage.setItem("contacts", JSON.stringify(contacts));
+
+            renderContacts();
+            closeModal();
+        }
+
+        /////////////////////////
+        // ✅ 10. MODAL
+        /////////////////////////
+
+        function openModal() {
+            document.getElementById("modal").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+
+        /////////////////////////
+        // ✅ 11. INIT
+        /////////////////////////
+
+        renderContacts();
+
+        document.getElementById("messageInput").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") sendMessage();
+        });
+
+    </script>
+
+</body>
+</html>
